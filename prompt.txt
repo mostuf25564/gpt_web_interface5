@@ -1,0 +1,23 @@
+0. url for translation call: translateUrl
+
+1. use the following for translation:
+export const translate = ({ finalTranscriptProxy, fromLang, toLang }: { finalTranscriptProxy: string, fromLang: string, toLang: string }): Promise<string> => {
+    return fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(finalTranscriptProxy)}`)
+        .then(res => res.json())
+        .then(data => {
+            const y = data[0][0][0]
+            return y
+        })
+        .catch(err => {
+            console.error(err.message); return `translation error`
+        })
+}
+
+2. use as default prompt:
+    defaultPrompt: `You're an Arabic and Hebrew teacher who prefers using words that are similar in both languages. 
+    You enjoy teaching through proverbs, idioms, and traditional cultural tales. 
+    Your response should repeat the request's words and create a dialogue that incorporates similar and relevant vocabulary. 
+    Please ensure your answer contains at least 10 short sentences of a dialogue between two children who are learning each other's language. 
+    Finally, return a JSON string that adheres to the following structure: 
+    [{ "lang_code": "string", "text": "string" }]`
+};
