@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Menu, X, AlertTriangle, MessageSquare, Clock } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../store';
 import { updateResponseSentences } from '../store/responseSlice';
+import { Sentence } from '../types/sentence';
+import { ValidResponse } from '../store/promptSlice';
 
 interface SidebarProps {
   isDebugMode: boolean;
@@ -13,11 +15,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isDebugMode, onViewChange, currentVie
   const [isOpen, setIsOpen] = useState(false);
   const errors = useAppSelector(state => state.errors.errors);
   const validResponses = useAppSelector(state => state.prompt.validResponses);
+  const bookmarks = useAppSelector(state => state.bookmarkSlice.bookmarks);
   const dispatch = useAppDispatch();
 
-  const handleResponseClick = (response: any) => {
-    if (response.result) {
-      dispatch(updateResponseSentences(response.result));
+  const handleResponseClick = (response: ValidResponse) => {
+    if (response?.sentences) {
+      dispatch(updateResponseSentences(response.sentences as Sentence[]));
       setIsOpen(false); // Close sidebar on mobile after selection
     }
   };
@@ -86,28 +89,53 @@ const Sidebar: React.FC<SidebarProps> = ({ isDebugMode, onViewChange, currentVie
                     {validResponses.length}
                   </span>
                 )}
-              </h3>
+              </h3>         
+               
               <div className="space-y-2">
-                {validResponses.length === 0 ? (
+                {bookmarks.length === 0 ? (
                   <p className="text-gray-400 text-sm italic px-4">
                     No validated responses yet
                   </p>
                 ) : (
-                  validResponses.map((response) => (
-                    <button
-                      key={response.id}
-                      onClick={() => handleResponseClick(response)}
+                  bookmarks.map((bookmark) => (
+                    <div
+                      key={bookmark.id}
                       className="w-full text-left p-3 rounded-md transition-colors hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700"
                     >
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium">
-                          Response #{response.id.slice(0, 8)}
+                          Bookmark #{bookmark.id.slice(0, 8)}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {new Date(response.timestamp).toLocaleString()}
+                          {new Date(bookmark.createdAt).toLocaleString()}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Valid Responses: {bookmark.validResponses.length}
                         </span>
                       </div>
-                    </button>
+                      
+                      {/* Show valid responses for this bookmark */}
+                      {bookmark.validResponses.length > 0 && (
+                        <div className="mt-2 pl-4">
+                          {bookmark.validResponses.map((response) => (
+                            <button
+                              key={response.id}
+                              onClick={() => handleResponseClick(response)}
+                              className="block text-left p-2 rounded-md transition-colors hover:bg-gray-600 text-gray-300 hover:text-white border border-gray-600"
+                            >
+                              <div className="flex flex-col gap-1">
+                                <span className="text-xs font-medium">
+                                  Response #{response.id.slice(0, 8)}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {new Date(response.timestamp).toLocaleString()}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))
                 )}
               </div>

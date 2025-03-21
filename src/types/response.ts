@@ -1,5 +1,5 @@
-import { sentence } from "./sentence";
+import { Sentence } from "./sentence";
 
 export interface expectedResponse {
-  result: sentence[]
+  result: Sentence[]
 }

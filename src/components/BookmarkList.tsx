@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Edit2, Share2, Check, Play } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../store';
-import { updateBookmark, markResponseAsRead, type Bookmark } from '../store/bookmarkSlice';
+import { updateBookmark, markResponseAsRead, type Bookmark, ValidResponseRead } from '../store/bookmarkSlice';
 import { setSelectedBookmarkResponse } from '../store/responseSlice';
+import { Sentence } from '../types/sentence';
 
 const BookmarkList: React.FC = () => {
-  const bookmarks = useAppSelector(state => state.bookmarks.bookmarks);
+  const bookmarks = useAppSelector(state => state.bookmarkSlice.bookmarks);
   const dispatch = useAppDispatch();
   const [expandedBookmarks, setExpandedBookmarks] = useState<Set<string>>(new Set());
   const [editingBookmark, setEditingBookmark] = useState<string | null>(null);
@@ -38,7 +39,7 @@ const BookmarkList: React.FC = () => {
   const handleShare = (bookmark: Bookmark) => {
     const shareData = {
       prompt: bookmark.prompt,
-      responses: bookmark.responses.map(r => r.content)
+      responses: bookmark.validResponses
     };
     
     const url = new URL(window.location.href);
@@ -48,15 +49,15 @@ const BookmarkList: React.FC = () => {
     alert('Shareable link copied to clipboard!');
   };
 
-  const handleResponseClick = (bookmarkId: string, responseId: string, content: string[]) => {
-    dispatch(markResponseAsRead({ bookmarkId, responseId }));
-    setSelectedResponse(responseId);
-    dispatch(setSelectedBookmarkResponse(content));
-  };
+  // const handleResponseClick = (bookmarkId: string, responseId: string, result: Sentence[]) => {
+  //   dispatch(markResponseAsRead({ bookmarkId, responseId }));
+  //   setSelectedResponse(responseId);
+  //   dispatch(setSelectedBookmarkResponse(result));
+  // };
 
-  const handlePlayResponse = (content: string[]) => {
-    dispatch(setSelectedBookmarkResponse(content));
-  };
+  // const handlePlayResponse = (result: Sentence[]) => {
+  //   dispatch(setSelectedBookmarkResponse(result));
+  // };
 
   if (bookmarks.length === 0) {
     return (
@@ -66,22 +67,22 @@ const BookmarkList: React.FC = () => {
     );
   }
 
-  const renderResponseContent = (response: Bookmark['responses'][0]) => {
+  const renderResponseContent = (response: ValidResponseRead) => {
     return (
       <div className="space-y-4 p-4 bg-gray-800 rounded-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlayResponse(response.content);
-              }}
+              // onClick={(e) => {
+              //   e.stopPropagation();
+              //   handlePlayResponse(response.sentences);
+              // }}
               className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Play className="w-4 h-4" />
             </button>
             <span className="text-sm text-gray-400">
-              {new Date(response.createdAt).toLocaleString()}
+              {new Date(response.timestamp).toLocaleString()}
             </span>
           </div>
           {response.read && (
@@ -91,16 +92,21 @@ const BookmarkList: React.FC = () => {
           )}
         </div>
         <div className="space-y-2">
-          {response.content.map((text, idx) => (
+        <p   className="text-gray-200 border-l-2 border-gray-700 pl-3">
+
+        {response.sentences.length}
+          </p>
+          {/* {response.sentences.map((sentence, idx) => (
             <p key={idx} className="text-gray-200 border-l-2 border-gray-700 pl-3">
-              {text}
+              {sentence.text}
             </p>
-          ))}
+          ))} */}
         </div>
       </div>
     );
   };
-
+console.log('debugger', {bookmarks})
+ 
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-100 mb-6">Saved Prompts & Responses</h2>
@@ -168,12 +174,12 @@ const BookmarkList: React.FC = () => {
           </div>
           {expandedBookmarks.has(bookmark.id) && (
             <div className="border-t border-gray-700">
-              {bookmark.responses.length > 0 ? (
+              {bookmark.validResponses.length > 0 ? (
                 <div className="p-4 space-y-4">
-                  {bookmark.responses.map(response => (
+                  {bookmark.validResponses.map(response => (
                     <div
                       key={response.id}
-                      onClick={() => handleResponseClick(bookmark.id, response.id, response.content)}
+                      // onClick={() => handleResponseClick(bookmark.id, response.id, response.sentences)}
                       className={`cursor-pointer transition-colors rounded-lg ${
                         selectedResponse === response.id
                           ? 'ring-2 ring-blue-500'

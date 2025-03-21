@@ -1,15 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {   ValidResponse } from './promptSlice';
 
+export type ValidResponseRead =ValidResponse & {read: boolean;};
 export interface Bookmark {
   id: string;
   prompt: string;
   createdAt: string;
-  responses: Array<{
-    id: string;
-    content: string[];
-    read: boolean;
-    createdAt: string;
-  }>;
+  validResponses: ValidResponseRead[];
 }
 
 interface BookmarkState {
@@ -21,15 +18,16 @@ const initialState: BookmarkState = {
 };
 
 const bookmarkSlice = createSlice({
-  name: 'bookmarks',
+  name: 'bookmarksSlice',
   initialState,
   reducers: {
-    addBookmark: (state, action: PayloadAction<{ prompt: string }>) => {
+    addBookmark: (state, action: PayloadAction<{ prompt: string, id:string }>) => {
       const newBookmark: Bookmark = {
-        id: crypto.randomUUID(),
+        id: action.payload.id, 
+   
         prompt: action.payload.prompt,
         createdAt: new Date().toISOString(),
-        responses: []
+        validResponses: []
       };
       state.bookmarks.push(newBookmark);
     },
@@ -39,21 +37,17 @@ const bookmarkSlice = createSlice({
         bookmark.prompt = action.payload.prompt;
       }
     },
-    addResponse: (state, action: PayloadAction<{ bookmarkId: string; content: string[] }>) => {
+    addResponse: (state, action: PayloadAction<{ bookmarkId: string; validResponse: ValidResponse}>) => {
       const bookmark = state.bookmarks.find(b => b.id === action.payload.bookmarkId);
       if (bookmark) {
-        bookmark.responses.push({
-          id: crypto.randomUUID(),
-          content: action.payload.content,
-          read: false,
-          createdAt: new Date().toISOString()
-        });
+        bookmark.validResponses.push({...action.payload.validResponse, read:false} as ValidResponseRead)
+     
       }
     },
     markResponseAsRead: (state, action: PayloadAction<{ bookmarkId: string; responseId: string }>) => {
       const bookmark = state.bookmarks.find(b => b.id === action.payload.bookmarkId);
       if (bookmark) {
-        const response = bookmark.responses.find(r => r.id === action.payload.responseId);
+        const response = bookmark.validResponses.find(r => r.id === action.payload.responseId);
         if (response) {
           response.read = true;
         }

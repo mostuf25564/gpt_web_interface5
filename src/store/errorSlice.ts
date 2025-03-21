@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { generateUUID } from '../utils/uuid';
 
 export interface AppError {
   id: string;
@@ -21,7 +22,7 @@ const errorSlice = createSlice({
   reducers: {
     addError: (state, action: PayloadAction<Omit<AppError, 'id' | 'timestamp'>>) => {
       state.errors.push({
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         ...action.payload,
         timestamp: new Date().toISOString()
       });

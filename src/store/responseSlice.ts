@@ -3,7 +3,7 @@ import { Sentence } from '../types/sentence';
 
 interface ResponseState {
   sentences: Sentence[];
-  selectedBookmarkResponse: string[] | null;
+  selectedBookmarkResponse: Sentence[] | null;
 }
 
 const initialState: ResponseState = {
@@ -18,7 +18,7 @@ const responseSlice = createSlice({
     updateResponseSentences(state, action: PayloadAction<Sentence[]>) {
       state.sentences = action.payload;
     },
-    setSelectedBookmarkResponse(state, action: PayloadAction<string[] | null>) {
+    setSelectedBookmarkResponse(state, action: PayloadAction<Sentence[] | null>) {
       state.selectedBookmarkResponse = action.payload;
     }
   }

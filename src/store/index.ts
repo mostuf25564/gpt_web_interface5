@@ -11,7 +11,7 @@ const store = configureStore({
     sentences: sentencesReducer,
     prompt: promptReducer,
     response: responseReducer,
-    bookmarks: bookmarkReducer,
+    bookmarkSlice: bookmarkReducer,
     errors: errorReducer,
   },
 });

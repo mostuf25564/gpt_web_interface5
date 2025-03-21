@@ -1,9 +1,17 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { sendAIRequest } from '../services/apiService';
-import { addBookmark, addResponse } from './bookmarkSlice';
+import { addBookmark, addResponse, ValidResponseRead } from './bookmarkSlice';
 import { addError } from './errorSlice';
+import { generateUUID } from '../utils/uuid';
+import { Sentence } from '../types/sentence';
 
 const url = 'https://api-git-main-ofershahams-projects.vercel.app/ai/logic';
+
+export interface ValidResponse {
+  id: string;
+  sentences: Sentence[];
+  timestamp: string;
+}
 
 export interface UserRequest {
   maxTotalResponseChars: number;
@@ -24,11 +32,7 @@ export interface AppState {
   userRequest: UserRequest;
   isLoading: boolean;
   error: string | null;
-  validResponses: Array<{
-    id: string;
-    result: any;
-    timestamp: string;
-  }>;
+  validResponses: ValidResponse[]
 }
 
 const initialState: AppState = {
@@ -84,13 +88,12 @@ const validateResponse = (data: any): boolean => {
 
 export const processPrompt = createAsyncThunk(
   'prompt/process',
-  async (request: { role: string, payload: string }, { dispatch, getState }) => {
+  async (request: { role: string, payload: string }, { dispatch }) => {
     const { role, payload } = request;
-    const validResponses: Array<{ id: string; result: any; timestamp: string }> = [];
-    
-    // Create bookmark immediately
-    const bookmarkId = crypto.randomUUID();
-    dispatch(addBookmark({ prompt: payload }));
+    const validResponses: Array<ValidResponse> = [];
+    const bookmarkId: string = generateUUID();
+
+    dispatch(addBookmark({ prompt: payload, id:bookmarkId }));
     
     while (validResponses.length < REQUIRED_VALID_RESPONSES) {
       let currentAttempt = 0;
@@ -121,23 +124,24 @@ export const processPrompt = createAsyncThunk(
 
           let result;
           if (typeof response.data.result === 'string') {
-            result = JSON.parse(response.data.result);
+            result = JSON.parse(response.data.result) as Sentence[];
           } else {
-            result = response.data.result;
+            result = response.data.result  as Sentence[];
           }
 
           // Add to valid responses
-          const responseId = crypto.randomUUID();
-          validResponses.push({
+          const responseId = generateUUID();
+          const validResponse = {
             id: responseId,
-            result,
+            sentences: result,
             timestamp: new Date().toISOString()
-          });
+          } as ValidResponse;
+          validResponses.push(validResponse  );
 
           // Add response to the bookmark
           dispatch(addResponse({
             bookmarkId,
-            content: result.map((item: any) => item.text)
+            validResponse  
           }));
 
           // Break the retry loop for this attempt
@@ -177,7 +181,7 @@ const promptSlice = createSlice({
     updateRequest: (state, action: PayloadAction<Partial<UserRequest>>) => {
       state.userRequest = { ...state.userRequest, ...action.payload };
     },
-    setValidResponses: (state, action: PayloadAction<Array<{ id: string; result: any; timestamp: string }>>) => {
+    setValidResponses: (state, action: PayloadAction<Array<ValidResponseRead>>) => {
       state.validResponses = action.payload;
     },
   },

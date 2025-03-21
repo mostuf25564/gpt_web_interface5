@@ -110,9 +110,9 @@ const App: React.FC = () => {
                   />
                 )}
               </div>
-              <div>
+              {/* <div>
                 <BookmarkList />
-              </div>
+              </div> */}
             </div>
           </>
         );
@@ -147,7 +147,7 @@ const App: React.FC = () => {
           </div>
         </div>
         
-        <ErrorDisplay />
+        {/* <ErrorDisplay /> */}
       </div>
     </Provider>
   );
